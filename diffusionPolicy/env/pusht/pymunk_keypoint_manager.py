@@ -128,7 +128,7 @@ class PymunkKeypointManager:
 
 '''
 def test():
-    from diffusion_policy.environment.push_t_env import PushTEnv
+    from diffusionPolicy.environment.push_t_env import PushTEnv
     from matplotlib import pyplot as plt
     
     env = PushTEnv(headless=True, obs_state=False, draw_action=False)

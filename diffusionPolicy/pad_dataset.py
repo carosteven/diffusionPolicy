@@ -1,4 +1,4 @@
-from diffusion_policy.common.replay_buffer import ReplayBuffer
+from diffusionPolicy.common.replay_buffer import ReplayBuffer
 import numpy as np
 import zarr
 

@@ -6,10 +6,10 @@ from einops import rearrange, reduce
 from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
 
 # Diffusion Policy imports
-from diffusion_policy.normalizer import LinearNormalizer
-from diffusion_policy.conditional_unet1d import ConditionalUnet1D
-from diffusion_policy.module_attr_mixin import ModuleAttrMixin
-from diffusion_policy.base_lowdim_policy import BaseLowdimPolicy
+from diffusionPolicy.normalizer import LinearNormalizer
+from diffusionPolicy.conditional_unet1d import ConditionalUnet1D
+from diffusionPolicy.module_attr_mixin import ModuleAttrMixin
+from diffusionPolicy.base_lowdim_policy import BaseLowdimPolicy
 
 
 class LowdimMaskGenerator(ModuleAttrMixin):
@@ -90,15 +90,18 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
             pred_action_steps_only=False,
             oa_step_convention=False,
             condition_trajectory=False,
-            env=None,
+            conditioning_functions=None,
+            seed=None,
             **kwargs):
         super().__init__()
+        self.noisy_paths = []
+        self.seed = seed
+        if seed is not None:
+            self.set_deterministic_mode()
         assert not (obs_as_local_cond and obs_as_global_cond)
         if pred_action_steps_only:
             assert obs_as_global_cond
-        # self.model = model
         self.model = ConditionalUnet1D(**model)
-        # self.noise_scheduler = noise_scheduler
         self.noise_scheduler = DDPMScheduler(**noise_scheduler)
         self.mask_generator = LowdimMaskGenerator(
             action_dim=action_dim,
@@ -118,12 +121,24 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
         self.pred_action_steps_only = pred_action_steps_only
         self.oa_step_convention = oa_step_convention
         self.condition_trajectory = condition_trajectory
-        self.env = env
+        self.conditioning_functions = conditioning_functions
         self.kwargs = kwargs
 
         if num_inference_steps is None:
             num_inference_steps = noise_scheduler.config.num_train_timesteps
         self.num_inference_steps = num_inference_steps
+    
+    def set_deterministic_mode(self):
+        torch.manual_seed(self.seed)
+        
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(self.seed)
+        if torch.backends.mps.is_available():
+            torch.mps.manual_seed(self.seed)
+            
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
     # ========= inference  ============
     def conditional_sample(self, 
             condition_data, condition_mask,
@@ -144,14 +159,11 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
         # set step values
         scheduler.set_timesteps(self.num_inference_steps)
 
+        self.noisy_paths = []
         for t in scheduler.timesteps:
             # 1. apply conditioning
             trajectory[condition_mask] = condition_data[condition_mask]
-            # if self.condition_trajectory and self.env is not None:
-            #     unnormalized_trajectory = self.normalizer['action'].unnormalize(trajectory)
-            #     # unnormalized_trajectory[~condition_mask] = self.env.ensure_valid_trajectory(unnormalized_trajectory[~condition_mask])
-            #     unnormalized_trajectory = self.env.ensure_valid_trajectory(unnormalized_trajectory)
-            #     trajectory = self.normalizer['action'].normalize(unnormalized_trajectory)
+            self.noisy_paths.append(self.normalizer['action'].unnormalize(trajectory).cpu().numpy())
 
             # 2. predict model output
             model_output = model(trajectory, t, 
@@ -163,32 +175,33 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
                 generator=generator,
                 **kwargs
                 ).prev_sample
-        
+            
         # finally make sure conditioning is enforced
         trajectory[condition_mask] = condition_data[condition_mask]
-        if self.condition_trajectory and self.env is not None:
+        if self.condition_trajectory and self.conditioning_functions is not None:
             # condition trajectory to stay in valid configuration space
-            unnormalized_trajectory = self.normalizer['action'].unnormalize(trajectory)
+            trajectory = self.normalizer['action'].unnormalize(trajectory)
+            self.noisy_paths.append(trajectory.cpu().numpy())
 
-            waypoints_feasible = self.env.ensure_valid_trajectory(unnormalized_trajectory, path_feasibility=False)
+            for func in self.conditioning_functions:
+                trajectory = func(trajectory)
 
-            pruned_trajectory = self.env.prune_by_distance(waypoints_feasible)
-
-            waypoints_feasible2 = self.env.ensure_valid_trajectory(pruned_trajectory, path_feasibility=True)
-
-            trajectory = self.normalizer['action'].normalize(waypoints_feasible2)
+            trajectory = self.normalizer['action'].normalize(trajectory)
 
         return trajectory
 
 
-    def predict_action(self, obs_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def predict_action(self, obs_dict: Dict[str, torch.Tensor], cond=None) -> Dict[str, torch.Tensor]:
         """
         obs_dict: must include "obs" key
+        cond: optional conditioning data
         result: must include "action" key
         """
 
         assert 'obs' in obs_dict
         assert 'past_action' not in obs_dict # not implemented yet
+        if self.condition_trajectory:
+            assert cond is not None
 
         nobs = self.normalizer['obs'].normalize(obs_dict['obs'])
         B, _, Do = nobs.shape
@@ -221,24 +234,25 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
             cond_data = torch.zeros(size=shape, device=device, dtype=dtype)
             cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
             if self.condition_trajectory:
-                # condition trajectory with current robot position and goal position
-                start_position = self.normalizer['action'].normalize(
-                    # obs_dict['obs'][:, To-1, :2])
-                    torch.tensor(self.env.robot.body.position))
-                goal_position = self.normalizer['action'].normalize(
-                    obs_dict['obs'][:, To-1, -2:])
+                # condition trajectory with current robot position and goal position (by inpainting)
+                start_position = self.normalizer['action'].normalize(cond[0])
+                goal_position = self.normalizer['action'].normalize(cond[1])
                 # fill in the first and last position
                 cond_data[:, 0, :2] = start_position
                 cond_data[:, -1, -2:] = goal_position
                 cond_mask[:, 0, :2] = True
                 cond_mask[:, -1, -2:] = True
         else:
-            # condition through impainting
+            # condition through inpainting
             shape = (B, T, Da+Do)
             cond_data = torch.zeros(size=shape, device=device, dtype=dtype)
             cond_mask = torch.zeros_like(cond_data, dtype=torch.bool)
             cond_data[:,:To,Da:] = nobs[:,:To]
             cond_mask[:,:To,Da:] = True
+        
+        generator = torch.Generator(device=device)
+        if self.seed is not None:
+            generator = generator.manual_seed(self.seed)
 
         # run sampling
         nsample = self.conditional_sample(
@@ -246,6 +260,7 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
             cond_mask,
             local_cond=local_cond,
             global_cond=global_cond,
+            generator=generator,
             **self.kwargs)
         
         # unnormalize prediction
@@ -264,7 +279,8 @@ class DiffusionUnetLowdimPolicy(BaseLowdimPolicy):
         
         result = {
             'action': action,
-            'action_pred': action_pred
+            'action_pred': action_pred,
+            'noisy_paths': self.noisy_paths,
         }
         if not (self.obs_as_local_cond or self.obs_as_global_cond):
             nobs_pred = nsample[...,Da:]

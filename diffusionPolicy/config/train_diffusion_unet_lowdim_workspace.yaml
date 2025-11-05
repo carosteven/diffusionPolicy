@@ -3,7 +3,7 @@ defaults:
   - task: boxdelivery_lowdim  # Ensure task is set to box delivery
 
 name: train_diffusion_unet_lowdim
-_target_: diffusion_policy.workspace.train_diffusion_unet_lowdim_workspace.TrainDiffusionUnetLowdimWorkspace
+_target_: diffusionPolicy.workspace.train_diffusion_unet_lowdim_workspace.TrainDiffusionUnetLowdimWorkspace
 
 obs_dim: ${task.obs_dim}
 action_dim: ${task.action_dim}
@@ -28,10 +28,10 @@ ema_target: EMAModel
 optimizer_target: AdamW
 
 policy:
-  # _target_: diffusion_policy.policy.diffusion_unet_lowdim_policy.DiffusionUnetLowdimPolicy
+  # _target_: diffusionPolicy.policy.diffusion_unet_lowdim_policy.DiffusionUnetLowdimPolicy
 
   model:
-    # _target_: diffusion_policy.model.diffusion.conditional_unet1d.ConditionalUnet1D
+    # _target_: diffusionPolicy.model.diffusion.conditional_unet1d.ConditionalUnet1D
     input_dim: "${eval: ${task.action_dim} if ${obs_as_local_cond} or ${obs_as_global_cond} else ${task.obs_dim} + ${task.action_dim}}"
     local_cond_dim: "${eval: ${task.obs_dim} if ${obs_as_local_cond} else None}"
     global_cond_dim: "${eval: ${task.obs_dim}*${n_obs_steps} if ${obs_as_global_cond} else None}"
@@ -66,7 +66,7 @@ policy:
   # predict_epsilon: True
 
 ema:
-  # _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  # _target_: diffusionPolicy.model.diffusion.ema_model.EMAModel
   update_after_step: 0
   inv_gamma: 1.0
   power: 0.75
@@ -121,7 +121,7 @@ training:
   job_id: null
 
 logging:
-  project: diffusion_policy_debug
+  project: diffusionPolicy_debug
   resume: True
   mode: online
   name: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}

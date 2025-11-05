@@ -11,7 +11,7 @@ keypoint_dim: 2
 dataset_target: BoxDeliveryLowdimDataset
 
 env_runner:
-  # _target_: diffusion_policy.env_runner.boxdelivery_runner.BoxDeliveryRunner
+  # _target_: diffusionPolicy.env_runner.boxdelivery_runner.BoxDeliveryRunner
   n_train: 6
   n_test: 50
   max_steps: 300
@@ -22,7 +22,7 @@ env_runner:
   n_envs: null
 
 dataset:
-  # _target_: diffusion_policy.dataset.boxdelivery_dataset.BoxDeliveryLowdimDataset
+  # _target_: diffusionPolicy.dataset.boxdelivery_dataset.BoxDeliveryLowdimDataset
   zarr_path: demo_data/box_delivery_teleop_demo_le.zarr
   # zarr_path: demo_data/box_delivery_expert_demo_sc.zarr
   # zarr_path: demo_data/box_delivery_expert_demo_10b.zarr

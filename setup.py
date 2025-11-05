@@ -6,28 +6,29 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 def read_requirements():
     """Read requirements from the main project requirements.txt"""
-    req_file = os.path.join(os.path.dirname(BASE_DIR), 'requirements.txt')
+    req_file = os.path.join(BASE_DIR, 'requirements.txt')
     if os.path.exists(req_file):
         with open(req_file, 'r') as f:
             return [line.strip() for line in f if line.strip() and not line.startswith('#')]
     return []
 
 setup(
-    name="diffusion_policy",
+    name="diffusionPolicy",
     version="0.1.0",
-    description="Diffusion Policy for BenchNPIN",
+    description="Diffusion Policy",
     author="Your Name",
     author_email="your.email@example.com",
     packages=find_packages(where='.'),  # Look in current directory
     package_dir={'': '.'},  # Packages are in current directory
     include_package_data=True,
     package_data={
-        "diffusion_policy": ["**/*.yaml", "**/*.yml", "**/*.json"],
+        "diffusionPolicy": ["**/*.yaml", "**/*.yml", "**/*.json"],
     },
     install_requires=[
         "torch>=1.12.0",
         "torchvision",
         "numpy>=1.20.0",
+        "gym==0.23.1",
         "scipy",
         "matplotlib",
         "hydra-core",
