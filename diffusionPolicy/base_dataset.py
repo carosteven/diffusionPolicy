@@ -1,7 +1,7 @@
 from typing import Dict
 import torch
 
-from normalizer import LinearNormalizer
+from diffusionPolicy.normalizer import LinearNormalizer
 
 class BaseLowdimDataset(torch.utils.data.Dataset):
     def get_validation_dataset(self) -> 'BaseLowdimDataset':

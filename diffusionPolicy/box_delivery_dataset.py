@@ -25,7 +25,7 @@ class BoxDeliveryLowdimDataset(BaseLowdimDataset):
             max_train_episodes=None
             ):
         super().__init__()
-        # TODO: FIND OUT HOW obs_key IS USED
+        print(zarr_path)
         self.replay_buffer = ReplayBuffer.copy_from_path(
             zarr_path, keys=[obs_key, state_key, action_key, mask_key])
 

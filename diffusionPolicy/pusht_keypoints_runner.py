@@ -8,15 +8,15 @@ import dill
 import math
 import wandb.sdk.data_types.video as wv
 
-from env.pusht.pusht_keypoints_env import PushTKeypointsEnv
-from gym_util.async_vector_env import AsyncVectorEnv
+from diffusionPolicy.env.pusht.pusht_keypoints_env import PushTKeypointsEnv
+from diffusionPolicy.gym_util.async_vector_env import AsyncVectorEnv
 # from diffusionPolicy.gym_util.sync_vector_env import SyncVectorEnv
-from gym_util.multistep_wrapper import MultiStepWrapper
-from gym_util.video_recording_wrapper import VideoRecordingWrapper, VideoRecorder
+from diffusionPolicy.gym_util.multistep_wrapper import MultiStepWrapper
+from diffusionPolicy.gym_util.video_recording_wrapper import VideoRecordingWrapper, VideoRecorder
 
-from base_lowdim_policy import BaseLowdimPolicy
-from common.pytorch_util import dict_apply
-from base_lowdim_runner import BaseLowdimRunner
+from diffusionPolicy.base_lowdim_policy import BaseLowdimPolicy
+from diffusionPolicy.common.pytorch_util import dict_apply
+from diffusionPolicy.base_lowdim_runner import BaseLowdimRunner
 
 class PushTKeypointsRunner(BaseLowdimRunner):
     def __init__(self,

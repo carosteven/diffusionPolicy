@@ -1,17 +1,12 @@
 name: boxdelivery_lowdim
 
-# obs_dim: 10  # 2 (robot) + 2 * num_boxes + 2 (receptacle) + 2 (goal)
-# obs_dim: 34 # 8 (robot) + 8 * num_boxes + 8 (receptacle) + 2 (goal)
-# obs_dim: 50 # 8 (robot) + 8 * num_boxes + 8 * num_columns + 8 (receptacle) + 2 (goal)
 obs_dim: 26 # 8 (robot) + 2 * num_boxes + 8 (receptacle) + 2 (goal)
-# obs_dim: 42 # 26 + 8 * 2 columns
 action_dim: 2  # Matches box_delivery_env's action space
 keypoint_dim: 2
 
 dataset_target: BoxDeliveryLowdimDataset
 
 env_runner:
-  # _target_: diffusionPolicy.env_runner.boxdelivery_runner.BoxDeliveryRunner
   n_train: 6
   n_test: 50
   max_steps: 300
@@ -22,16 +17,11 @@ env_runner:
   n_envs: null
 
 dataset:
-  # _target_: diffusionPolicy.dataset.boxdelivery_dataset.BoxDeliveryLowdimDataset
-  zarr_path: demo_data/box_delivery_teleop_demo_le.zarr
-  # zarr_path: demo_data/box_delivery_expert_demo_sc.zarr
-  # zarr_path: demo_data/box_delivery_expert_demo_10b.zarr
+  zarr_path: demonstration_data/box_delivery_teleop_demo_le.zarr
   horizon: ${horizon}
   pad_before: "${eval:${n_obs_steps}-1+${n_latency_steps}}"
   pad_after: "${eval:${n_action_steps}-1}"
   seed: 42
   val_ratio: 0.02
   max_train_episodes: 90
-  # obs_key: 'state_positions'
-  # obs_key: 'state_vertices'
   obs_key: 'state_combo'

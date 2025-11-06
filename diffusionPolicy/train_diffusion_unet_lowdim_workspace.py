@@ -27,7 +27,7 @@ from diffusionPolicy.base_lowdim_runner import BaseLowdimRunner
 from diffusionPolicy.common.pytorch_util import dict_apply, optimizer_to
 from diffusionPolicy.common.json_logger import JsonLogger
 from diffusionPolicy.base_dataset import BaseLowdimDataset
-from diffusionPolicy.pusht_keypoints_runner import PushTKeypointsRunner
+# from diffusionPolicy.pusht_keypoints_runner import PushTKeypointsRunner
 from diffusionPolicy.ema_model import EMAModel
 
 from diffusionPolicy.box_delivery_dataset import BoxDeliveryLowdimDataset
