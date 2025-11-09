@@ -12,7 +12,7 @@ import sys
 from enum import Enum
 from copy import deepcopy
 
-from gym import logger
+from gymnasiumimport logger
 from gym.vector.vector_env import VectorEnv
 from gym.error import (
     AlreadyPendingCallError,

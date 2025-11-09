@@ -1,5 +1,5 @@
 from typing import Dict, Sequence, Union, Optional
-from gym import spaces
+from gymnasiumimport spaces
 from diffusionPolicy.env.pusht.pusht_env import PushTEnv
 from diffusionPolicy.env.pusht.pymunk_keypoint_manager import PymunkKeypointManager
 import numpy as np
