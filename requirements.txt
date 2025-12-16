@@ -38,8 +38,7 @@ tensorboardX==2.5.1
 wandb==0.13.3
 
 # RL, robotics, and simulation
-# gym==0.21.0
-gym==0.23.1
+gymnasium>=1.2.2,
 pygame==2.1.2
 # pybullet-svl==3.1.6.4
 pymunk==6.2.1
@@ -48,10 +47,10 @@ scikit-image==0.19.3
 scikit-video==1.1.11
 
 # Diffusion-related
-diffusers==0.11.1
+diffusers==0.35.2
 accelerate==0.13.2
 datasets==2.6.1
-huggingface_hub<=0.13.4  # for diffusers compatibility
+huggingface_hub==1.0.1
 
 # pip extras and direct links
 # ray[default,tune]==2.2.0
