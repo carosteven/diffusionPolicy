@@ -19,7 +19,7 @@ click==8.0.4
 cython==0.29.32
 imageio==2.22.0
 imageio-ffmpeg==0.4.7
-shapely==1.8.4
+shapely>=2.0.7
 zarr==2.12.0
 numcodecs==0.10.2
 threadpoolctl==3.1.0
@@ -47,10 +47,10 @@ scikit-image==0.19.3
 scikit-video==1.1.11
 
 # Diffusion-related
-diffusers==0.35.2
+diffusers==0.34.0
 accelerate==0.13.2
 datasets==2.6.1
-huggingface_hub==1.0.1
+huggingface_hub==0.34.4
 
 # pip extras and direct links
 # ray[default,tune]==2.2.0
